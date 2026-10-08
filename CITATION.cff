@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If authorized to use these materials, please cite this repository and the release or commit used. Citation does not grant reuse permission."
+type: software
+title: "Teaching: Lecture Notes Skill"
+authors:
+  - name: "Sheng"
+repository-code: "https://github.com/sj156/teaching"
+url: "https://github.com/sj156/teaching"
+abstract: "A reusable instruction-based workflow for drafting, revising, and auditing lecture notes."

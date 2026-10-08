@@ -1,0 +1,1802 @@
+%%
+%%   This is file `myMath-notes.sty'
+%%
+
+\def\fileversion{1.2}
+\def\filedate{2026/09/01}
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{myMath-notes}[\filedate\space v\fileversion\space Personal mathematics notes package]
+
+\typeout{-- Package: `myMath-notes' v\fileversion\space <\filedate> --}
+
+% --------------------------------------------------------------------
+% Package policy
+% --------------------------------------------------------------------
+%
+% myMath-notes is a personal lecture-notes package.
+%
+% Design choices:
+%   1. This package intentionally loads and configures hyperref.
+%   2. This package intentionally loads and configures natbib.
+%   3. This package intentionally sets the standard lecture-notes page
+%      geometry, numbering style, table spacing, and graphics path.
+%   4. Theorem-like environments use amsthm + framed/shaded, not
+%      tcolorbox, in order to preserve the original visual style.
+%   5. tcolorbox is still used for inline code boxes and selected
+%      pedagogical display boxes.
+%
+% User-facing convention:
+%   - For lecture notes, the document preamble should usually contain
+%     only:
+%
+%       \documentclass[11pt]{article}
+%       \usepackage{myMath-notes}
+%
+%   - Use \usepackage[subsectionfloats]{myMath-notes} when figures and
+%     tables should be numbered within subsections.
+%   - algorithm and algpseudocode are loaded here; use algorithm with
+%     algorithmic for numbered language-neutral procedures.
+%
+%   - Do not separately load hyperref, natbib, geometry, xcolor,
+%     amsmath, amsthm, graphicx, tikz, pgfplots, listings, framed,
+%     tablefootnote, needspace, etoc, or the other packages managed here.
+%
+%   - To customize link behavior, use \hypersetup{...} after loading
+%   myMath-notes.
+
+
+% Optional float numbering policy; default remains section-based.
+\newif\ifnotesSubsectionFloats
+\DeclareOption{subsectionfloats}{\notesSubsectionFloatstrue}
+\ProcessOptions\relax
+
+% --------------------------------------------------------------------
+% Dependencies
+% --------------------------------------------------------------------
+
+% Core mathematics
+\RequirePackage{latexsym}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+\RequirePackage{mathrsfs}
+\RequirePackage{amsfonts}
+\RequirePackage{mathtools}
+\RequirePackage{mathalfa}
+\RequirePackage{dsfont}
+\RequirePackage{bm}
+\RequirePackage{bbm}
+
+% Symbols
+\RequirePackage{wasysym}
+\RequirePackage{marvosym}
+
+% Graphics, color, and framed theorem backgrounds
+\PassOptionsToPackage{svgnames}{xcolor}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx} % for \resizebox
+\RequirePackage{framed}   % for shaded theorem environments
+
+% Text, code, and algorithms
+% The notes are English-only and do not load babel/polyglossia.  Requesting
+% csquotes' multilingual autostyle in that setting only produces a warning;
+% the default English quote style is sufficient here.
+\RequirePackage{csquotes}
+\RequirePackage{xspace}
+\RequirePackage{xparse}
+\RequirePackage{cancel}
+\RequirePackage{listings}
+\RequirePackage{fancyvrb}
+\RequirePackage{algorithm}
+\RequirePackage{algpseudocode}
+
+% --------------------------------------------------------------------
+% Standard lecture-note document utilities
+% --------------------------------------------------------------------
+
+% Page layout.
+\RequirePackage{geometry}
+
+% Keep short displayed units together when a chapter requests it.
+\RequirePackage{needspace}
+
+% Layered global and local tables of contents.  etoc detects hyperref at
+% begin-document time, so it can remain with the ordinary utilities while
+% hyperref is loaded late below.
+\RequirePackage{etoc}
+
+% Counter control for section-based figure/table numbering.
+\RequirePackage{chngcntr}
+
+% Lists.
+\RequirePackage[shortlabels]{enumitem}
+
+% Tables, floats, landscape pages, and layout helpers.
+\RequirePackage{array}
+\RequirePackage{float}
+\RequirePackage{booktabs}
+\RequirePackage{multirow}
+\RequirePackage{tabularx}
+\RequirePackage{morefloats}
+\RequirePackage{adjustbox}
+
+% Prefer pdflscape to lscape when hyperref is used.
+\RequirePackage{pdflscape}
+
+% Extra symbols, e.g. \ding.
+\RequirePackage{pifont}
+
+% Citations.
+% natbib must be loaded before hyperref.
+\RequirePackage[round,sort,compress,authoryear]{natbib}
+
+% TikZ and PGFPlots
+\RequirePackage{tikz}
+\RequirePackage{pgfplots}
+
+\usetikzlibrary{
+  shapes.geometric,
+  arrows,
+  arrows.meta,
+  chains,
+  positioning,
+  calc,
+  decorations.text,
+  decorations.pathreplacing,
+  decorations.markings,
+  patterns,
+  math,
+  shadows,
+  shadows.blur
+}
+
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{fillbetween}
+
+% tcolorbox is used for inline code boxes and selected display boxes.
+% The theorem-like environments below intentionally remain based on
+% amsthm + framed/shaded.
+\RequirePackage[most]{tcolorbox}
+
+
+% --------------------------------------------------------------------
+% Standard lecture-note layout
+% --------------------------------------------------------------------
+%
+% These settings standardize the appearance of lecture notes using this
+% package. They are applied automatically.
+
+\geometry{
+  letterpaper,
+  left=0.9in,
+  right=0.9in,
+  top=0.7in,
+  bottom=0.75in,
+  includefoot,
+  %verbose,  
+  ignoremp
+}
+
+% Standard figure directory for lecture notes.
+% Paths are relative to the main .tex file.
+\graphicspath{{./figures/}}
+
+% Table of contents depth.
+\setcounter{tocdepth}{2} 
+
+
+% --------------------------------------------------------------------
+% Layered navigation for lecture notes
+% --------------------------------------------------------------------
+%
+% Page breaks remain the responsibility of the master document, so the
+% document structure stays visible there.
+%
+%   \notesoverviewcontents              % sections
+%   \notesdetailedcontents              % subsections
+%   \part{...}\localpartcontents        % subsubsections in that part
+
+\NewDocumentCommand{\notesoverviewcontents}{O{Contents at a Glance}}{%
+  \begingroup
+  \renewcommand{\contentsname}{#1}%
+  \etocsetnexttocdepth{section}%
+  \tableofcontents
+  \endgroup
+}
+
+\NewDocumentCommand{\notesdetailedcontents}{O{Detailed Contents}}{%
+  \begingroup
+  \renewcommand{\contentsname}{#1}%
+  \etocsetnexttocdepth{subsection}%
+  \tableofcontents
+  \endgroup
+}
+
+% Unnumbered front-matter sections need both a hyperlink target and a table
+% of contents entry.  Keeping that bookkeeping here prevents individual
+% front-matter files from drifting apart.
+\NewDocumentCommand{\notesfrontsection}{m}{%
+  \section*{#1}%
+  \phantomsection
+  \addcontentsline{toc}{section}{#1}%
+}
+
+\newcommand*{\localpartcontents}{%
+  \begingroup
+  \small
+  \etocsetnexttocdepth{subsubsection}%
+  \etocsettocstyle
+    {\section*{Local Contents for Part~\thepart}}
+    {}%
+  \localtableofcontents
+  \endgroup
+}
+
+% Float numbering follows the selected policy; equations remain section-based.
+\ifnotesSubsectionFloats
+  \counterwithin{figure}{subsection}
+  \counterwithin{table}{subsection}
+\else
+  \counterwithin{figure}{section}
+  \counterwithin{table}{section}
+\fi
+\numberwithin{equation}{section}
+
+% Algorithms are numbered within subsections (e.g. Algorithm 3.3.1).
+\counterwithin{algorithm}{subsection}
+
+% Slightly roomier tables.
+\renewcommand{\arraystretch}{1.25}
+
+
+
+% Hyperref is intentionally managed by myMath-notes.
+% It is loaded without package options and configured via \hypersetup
+% to reduce option-clash problems.
+\RequirePackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!75!black,
+  urlcolor=blue!60!black
+}
+
+% tablefootnote works best after hyperref when linked footnotes are desired.
+\RequirePackage{tablefootnote}
+
+% Figure and table counters reset within sections above.  Their PDF anchors
+% must retain the section number as well, or hyperref can create duplicate
+% destinations when the visible counter restarts.
+\ifnotesSubsectionFloats
+  \renewcommand*{\theHfigure}{\theHsubsection.\arabic{figure}}
+  \renewcommand*{\theHtable}{\theHsubsection.\arabic{table}}
+\else
+  \renewcommand*{\theHfigure}{\theHsection.\arabic{figure}}
+  \renewcommand*{\theHtable}{\theHsection.\arabic{table}}
+\fi
+
+% Keep algorithm hyperlink destinations unique after subsection resets.
+\providecommand*{\theHalgorithm}{}
+\renewcommand*{\theHalgorithm}{\theHsubsection.\arabic{algorithm}}
+
+% --------------------------------------------------------------------
+% Colors
+% --------------------------------------------------------------------
+
+% Listings colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.90,0.95,0.95}
+
+% TikZ colors
+\definecolor{softblue}{RGB}{230, 242, 255}
+\definecolor{strongblue}{RGB}{70, 130, 180}
+\definecolor{softorange}{RGB}{255, 240, 220}
+\definecolor{softgreen}{RGB}{220, 255, 220}
+\definecolor{softred}{RGB}{255, 225, 225}
+
+% Box/theorem colors
+\definecolor{azure}{RGB}{0, 80, 150}    % Theory/definitions
+\definecolor{forest}{RGB}{0, 100, 50}   % Examples
+\definecolor{brick}{RGB}{180, 50, 50}   % Alerts/results/counterexamples
+\definecolor{amber}{RGB}{200, 100, 0}   % Remarks/notes
+
+
+% --------------------------------------------------------------------
+% Mathematics: references and alphabet shortcuts
+% --------------------------------------------------------------------
+
+% --------------------------------------------------------------------
+% Cross-reference shortcuts
+% --------------------------------------------------------------------
+%
+% Label convention:
+%   equations: \label{eq:<prefix><suffix>}
+%   figures:   \label{fig:<prefix><suffix>}
+%   tables:    \label{tab:<prefix><suffix>}
+%
+% These commands keep the original two-argument convention:
+%   \eq{main}{1}  -> Equation~\eqref{eq:main1}
+%   \fig{main}{1} -> Figure~\ref{fig:main1}
+%   \tab{main}{1} -> Table~\ref{tab:main1}
+
+\newcommand{\eq}[2]{Equation~\eqref{eq:#1#2}}
+\newcommand{\fig}[2]{Figure~\ref{fig:#1#2}}
+\newcommand{\tab}[2]{Table~\ref{tab:#1#2}}
+
+
+% --------------------------------------------------------------------
+% Common mathematical sets and spaces
+% --------------------------------------------------------------------
+%
+% These short aliases are kept for compatibility with existing notes.
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\T}{\mathbb{T}}
+
+% Probability and expectation.  Expectation is a mathematical operator so
+% that subscripts and following arguments receive operator spacing.
+\newcommand{\pr}{\mathbb{P}}
+\newcommand{\E}{\mathop{\mathbb{E}}\nolimits}
+
+% Common calligraphic objects.
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\B}{\mathcal{B}}
+
+% Warning:
+%   \P and \S are standard LaTeX text symbols.
+%   In this personal notes package they are intentionally redefined as
+%   mathematical shortcuts, matching the original package behavior.
+%
+% If the textual paragraph/section symbols are needed, use:
+%   \textparagraph
+%   \textsection
+
+\renewcommand{\P}{\mathcal{P}}
+\renewcommand{\S}{\mathbb{S}}
+
+% Unit disk / generic blackboard D.
+\newcommand{\disc}{\mathbb{D}}
+
+
+% --------------------------------------------------------------------
+% Blackboard-bold uppercase letters
+% --------------------------------------------------------------------
+%
+% Original convention preserved:
+%   \bR -> \mathbb{R}, \bN -> \mathbb{N}, etc.
+%
+% This block completes the alphabet for consistency.
+
+\newcommand{\bA}{\mathbb{A}}
+\newcommand{\bB}{\mathbb{B}}
+\newcommand{\bC}{\mathbb{C}}
+\newcommand{\bD}{\mathbb{D}}
+\newcommand{\bE}{\mathbb{E}}
+\newcommand{\bF}{\mathbb{F}}
+\newcommand{\bG}{\mathbb{G}}
+\newcommand{\bH}{\mathbb{H}}
+\newcommand{\bI}{\mathbb{I}}
+\newcommand{\bJ}{\mathbb{J}}
+\newcommand{\bK}{\mathbb{K}}
+\newcommand{\bL}{\mathbb{L}}
+\newcommand{\bM}{\mathbb{M}}
+\newcommand{\bN}{\mathbb{N}}
+\newcommand{\bO}{\mathbb{O}}
+\newcommand{\bP}{\mathbb{P}}
+\newcommand{\bQ}{\mathbb{Q}}
+\newcommand{\bR}{\mathbb{R}}
+\newcommand{\bS}{\mathbb{S}}
+\newcommand{\bT}{\mathbb{T}}
+\newcommand{\bU}{\mathbb{U}}
+\newcommand{\bV}{\mathbb{V}}
+\newcommand{\bW}{\mathbb{W}}
+\newcommand{\bX}{\mathbb{X}}
+\newcommand{\bY}{\mathbb{Y}}
+\newcommand{\bZ}{\mathbb{Z}}
+
+
+% --------------------------------------------------------------------
+% Calligraphic uppercase letters
+% --------------------------------------------------------------------
+%
+% Original convention preserved:
+%   \cF -> \mathcal{F}, \cP -> \mathcal{P}, etc.
+
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cI}{\mathcal{I}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\cK}{\mathcal{K}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\cS}{\mathcal{S}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cU}{\mathcal{U}}
+\newcommand{\cV}{\mathcal{V}}
+\newcommand{\cW}{\mathcal{W}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cY}{\mathcal{Y}}
+\newcommand{\cZ}{\mathcal{Z}}
+
+
+% --------------------------------------------------------------------
+% Named text macros and proof headings
+% --------------------------------------------------------------------
+
+\newcommand{\PG}{P{\'o}lya--Gamma}
+\newcommand{\proofheading}[1]{\smallskip\noindent\textbf{#1.}\quad}
+\newcommand{\post}{\operatorname{post}} 
+
+
+% --------------------------------------------------------------------
+% Mathematical operators
+% --------------------------------------------------------------------
+%
+% Use \DeclareMathOperator for named operators. This gives correct
+% upright text and correct operator spacing in math mode.
+%
+% Standard LaTeX/amsmath operators are intentionally not redefined here:
+%   \max, \min, \log, \dim, \ker.
+%
+% For modulo notation, prefer amsmath's built-in commands:
+%   a \bmod n
+%   a \equiv b \pmod{n}
+%   a \mod{n}
+%
+% The original package redefined \Re and \Im to produce upright text.
+% That behavior is preserved.
+
+\renewcommand{\Re}{\operatorname{Re}}
+\renewcommand{\Im}{\operatorname{Im}}
+
+% Linear algebra and matrix operators
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\adj}{adj}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\row}{row}
+\DeclareMathOperator{\col}{col}
+\DeclareMathOperator{\nullity}{nullity}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\df}{df}
+
+% Sets, maps, and functional analysis
+\DeclareMathOperator{\dom}{dom}
+\DeclareMathOperator{\ran}{ran}
+\DeclareMathOperator{\Null}{null}
+\DeclareMathOperator{\Span}{span}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\ext}{ext}
+
+% Probability, statistics, and information theory
+\DeclareMathOperator{\corr}{corr}
+\DeclareMathOperator{\cov}{Cov}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator{\sd}{sd} 
+\newcommand{\Var}{\mathop{\mathbb{V}}\nolimits}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\Dir}{Dir}
+
+% Complex analysis and special functions
+\DeclareMathOperator{\Arg}{Arg}
+\DeclareMathOperator{\Log}{Log}
+\DeclareMathOperator{\Abs}{Abs}
+\newcommand{\AbsC}{\Abs\cC}
+
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\Tan}{Tan}
+\DeclareMathOperator{\Arctan}{Arctan}
+\DeclareMathOperator{\Arcsin}{Arcsin}
+\DeclareMathOperator{\Arccos}{Arccos}
+\DeclareMathOperator{\erf}{erf}
+\DeclareMathOperator{\sgn}{sgn}
+
+% Miscellaneous named operators
+\DeclareMathOperator{\Ham}{Ham}
+\DeclareMathOperator{\rms}{rms}
+\DeclareMathOperator{\res}{res}
+\DeclareMathOperator{\logit}{logit}
+
+% Optimization operators with limits underneath in display math.
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Preserve the original division symbol before any vector-calculus
+% shorthand changes \div later in the package.
+\let\divsign\div
+
+% --------------------------------------------------------------------
+% Calculus and derivative notation
+% --------------------------------------------------------------------
+%
+% Preferred descriptive commands:
+%   \jacobian{f}{x}    -> partial(f)/partial(x)
+%   \pderiv{f}{x}      -> partial f / partial x
+%   \ppderiv{f}{x}{y}  -> partial^2 f / partial x partial y
+%   \deriv{f}{x}       -> d f / d x
+%   \ddt{f}            -> d f / d t
+%   \fderiv{F}{f}      -> delta F / delta f
+%
+% Original shorter names are preserved as compatibility aliases:
+%   \Jacob, \prtl, \di, \dii, \Total, \Func.
+
+% Upright differential symbol.
+% Usage:
+%   \int f(x)\,\dd x
+%   \deriv{f}{x}
+\newcommand{\dd}{\mathop{}\!\mathrm{d}}
+
+% Descriptive derivative commands.
+\newcommand{\jacobian}[2]{\frac{\partial(#1)}{\partial(#2)}}
+\newcommand{\pderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\ppderiv}[3]{\frac{\partial^{2} #1}{\partial #2\,\partial #3}}
+\newcommand{\deriv}[2]{\frac{\dd #1}{\dd #2}}
+\newcommand{\fderiv}[2]{\frac{\delta #1}{\delta #2}}
+
+% Original compatibility aliases.
+\newcommand{\Jacob}[2]{\jacobian{#1}{#2}}
+\newcommand{\prtl}[2]{\pderiv{#1}{#2}}
+\newcommand{\di}[2]{\pderiv{#1}{#2}}
+\newcommand{\dii}[3]{\ppderiv{#1}{#2}{#3}}
+\newcommand{\Total}[2]{\deriv{#1}{#2}}
+\newcommand{\ddt}[1]{\deriv{#1}{t}}
+\newcommand{\Func}[2]{\fderiv{#1}{#2}}
+
+
+% --------------------------------------------------------------------
+% Vector-calculus notation
+% --------------------------------------------------------------------
+%
+% The original package redefined \div to mean divergence.
+% This is preserved for compatibility, but documented explicitly.
+%
+% Warning:
+%   \div is normally the division symbol. In myMath-notes, \div means
+%   divergence, written as \nabla\cdot.
+%
+% Use \divsign for the ordinary division symbol.
+
+\providecommand{\grad}{\nabla}
+\newcommand{\Div}{\grad\!\cdot}
+
+\renewcommand{\div}{\Div}
+
+
+% --------------------------------------------------------------------
+% Probability/statistics abbreviations and symbols
+% --------------------------------------------------------------------
+%
+% The following text-style shortcuts are designed to work in ordinary
+% text and, when needed, inside math mode.
+%
+% Examples:
+%   The variables are \iid with common density \(f\).
+%   \(X_1,\dots,X_n\) are \iid.
+%   The matrix is \pd.
+%
+% The xspace package preserves the convenient original behavior of
+% writing "\iid sample" without needing "\iid{} sample", while avoiding
+% most unwanted spaces before punctuation.
+
+\makeatletter
+
+\newcommand{\mymathnotes@abbr}[1]{%
+  \ifmmode
+    \text{#1}%
+  \else
+    #1\@%
+  \fi
+  \xspace
+}
+
+\newcommand{\mymathnotes@phrase}[1]{%
+  \ifmmode
+    \text{#1}%
+  \else
+    #1%
+  \fi
+  \xspace
+}
+
+\newcommand{\iid}{\mymathnotes@abbr{i.i.d.}}
+\newcommand{\pd}{\mymathnotes@abbr{p.d.}}
+\newcommand{\pdf}{\mymathnotes@abbr{p.d.f.}}
+\newcommand{\cdf}{\mymathnotes@abbr{c.d.f.}}
+\newcommand{\pdfs}{\mymathnotes@phrase{p.d.f.s}}
+\newcommand{\cdfs}{\mymathnotes@phrase{c.d.f.s}}
+\newcommand{\mgf}{\mymathnotes@abbr{m.g.f.}}
+\newcommand{\mgfs}{\mymathnotes@phrase{m.g.f.s}}
+
+\newcommand{\fullmgf}{\mymathnotes@phrase{moment generating function}}
+\newcommand{\fullpd}{\mymathnotes@phrase{positive definite}}
+
+\makeatother
+
+
+% Independence symbol.
+%
+% Usage:
+%   X \ind Y
+%   X \ind Y \mid Z
+%
+% The command is a math relation, so it receives relation spacing.
+
+\newcommand{\ind}{\mathrel{\perp\!\!\!\perp}}
+
+
+% --------------------------------------------------------------------
+% Convergence arrows
+% --------------------------------------------------------------------
+%
+% Original command names are preserved:
+%   \idto   convergence in distribution
+%   \ipto   convergence in probability
+%   \iasto  almost-sure convergence
+%   \imsto  mean-square convergence
+%   \islto  stable-law convergence
+%   \il1to  L_1 convergence
+%
+% More descriptive aliases are also provided:
+%   \dto, \pto, \asto, \msto, \stableto, \LoneTo.
+
+\newcommand{\dto}{\mathrel{\xrightarrow{d}}}
+\newcommand{\pto}{\mathrel{\xrightarrow{p}}}
+\newcommand{\asto}{\mathrel{\xrightarrow{\mathrm{a.s.}}}}
+\newcommand{\msto}{\mathrel{\xrightarrow{\mathrm{m.s.}}}}
+\newcommand{\stableto}{\mathrel{\xrightarrow{\mathcal{L}\text{-}s}}}
+%\newcommand{\LoneTo}{\mathrel{\xrightarrow{\mathcal{L}_{1}}}}
+
+% Compatibility aliases from the original package.
+\newcommand{\idto}{\dto}
+\newcommand{\ipto}{\pto}
+\newcommand{\iasto}{\asto}
+\newcommand{\imsto}{\msto}
+\newcommand{\islto}{\stableto}
+%\newcommand{\il1to}{\LoneTo}
+
+
+% --------------------------------------------------------------------
+% Special names
+% --------------------------------------------------------------------
+
+\newcommand{\levy}{L\'{e}vy\xspace}
+\newcommand{\Holder}{H{\"o}lder\xspace}
+
+%\def\wlog{without loss of generality\}
+%\def\wwlog{Without loss of generality\nolimits}
+ 
+%\def\eqd{\overset{d}{}}
+%
+
+% --------------------------------------------------------------------
+% General mathematical notation
+% --------------------------------------------------------------------
+
+% Indicator / all-ones symbol.
+\newcommand{\one}{\mathbf{1}}
+
+% Norms.
+%
+% Usage:
+%   \norm{x}
+%   \norm*{\frac{x}{y}}       % automatically sized delimiters
+%   \norm[\big]{x}            % manually sized delimiters
+%
+% Requires mathtools, already loaded above.
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+
+% Inner product.
+%
+% Original command name preserved:
+%   \inner{x}{y} -> <x, y>
+\newcommand{\inner}[2]{\langle #1, #2\rangle}
+
+
+% --------------------------------------------------------------------
+% Function spaces and measure-theoretic notation
+% --------------------------------------------------------------------
+
+% Compactly supported continuous functions on X.
+% Original shortcut preserved.
+\newcommand{\Cc}{C_c(X)}
+
+% More flexible variant:
+%   \CcOf{Y} -> C_c(Y)
+\newcommand{\CcOf}[1]{C_c(#1)}
+
+% Generic measure/fraktur M.
+\newcommand{\M}{\mathfrak{M}}
+
+
+% --------------------------------------------------------------------
+% Gaussian process / Bayesian nonparametrics notation
+% --------------------------------------------------------------------
+
+\newcommand{\GP}{\mathcal{GP}}
+\newcommand{\DP}{\mathcal{DP}}
+\newcommand{\RKHS}{\mathcal{H}}
+
+
+% --------------------------------------------------------------------
+% Kernel names
+% --------------------------------------------------------------------
+%
+% These are kept visually close to the original definitions.
+
+\newcommand{\SE}{\mathrm{SE}}
+\newcommand{\Matern}{\mathrm{Mat\acute{e}rn}}
+\newcommand{\RQ}{\mathrm{RQ}}
+\newcommand{\Per}{\mathrm{Period}}
+
+
+% --------------------------------------------------------------------
+% Matrix cones and vectorization
+% --------------------------------------------------------------------
+
+% Symmetric positive definite cone.
+\newcommand{\Spp}{\mathbb{S}_{++}}
+
+% Vectorization operator.
+\DeclareMathOperator{\vecop}{vec}
+
+
+% --------------------------------------------------------------------
+% Small miscellaneous notation
+% --------------------------------------------------------------------
+
+% Small inline bullet used in notes.
+% This is a cleaner replacement for the original picture-based bullet.
+\newcommand{\sbt}{\raisebox{0.2ex}{\scalebox{0.55}{$\bullet$}}\xspace}
+
+% Beta shortcuts.
+\newcommand{\betaZero}{\beta_0}
+\newcommand{\betaold}{\betaZero}
+\newcommand{\betahat}{\hat{\beta}}
+
+
+% --------------------------------------------------------------------
+% Model-selection and predictive-assessment criteria
+% --------------------------------------------------------------------
+%
+% Usage examples:
+%   \BIC, \AIC, \WAIC, \LOO, \CV.
+%
+% These are declared as math operators so that they are typeset upright
+% and receive proper spacing in math mode.
+
+\DeclareMathOperator{\BIC}{BIC}       % Bayesian Information Criterion
+\DeclareMathOperator{\AIC}{AIC}       % Akaike Information Criterion
+\DeclareMathOperator{\AICc}{AICc}     % Corrected AIC
+\DeclareMathOperator{\DIC}{DIC}       % Deviance Information Criterion
+\DeclareMathOperator{\WAIC}{WAIC}     % Watanabe-Akaike Information Criterion
+\DeclareMathOperator{\LOO}{LOO}       % Leave-One-Out Cross-Validation
+\DeclareMathOperator{\CV}{CV}         % Cross-Validation
+\DeclareMathOperator{\GCV}{GCV}       % Generalized Cross-Validation
+\DeclareMathOperator{\EBIC}{EBIC}     % Extended BIC
+\DeclareMathOperator{\HQIC}{HQIC}     % Hannan--Quinn Information Criterion
+
+
+% --------------------------------------------------------------------
+% Probability distribution notation
+% --------------------------------------------------------------------
+%
+% Usage examples:
+%   X \sim \Normal(\mu,\sigma^2)
+%   X \sim \Bern(p)
+%   X \sim \Bin(n,p)
+%   Y \sim \Pois(\lambda)
+%   \theta \sim \Dirich(\alpha)
+%
+% Most named distributions are declared as math operators. Symbolic
+% distributions such as Normal and chi-squared are handled separately.
+
+% --------------------------------------------------------------------
+% Discrete distributions
+% --------------------------------------------------------------------
+
+\DeclareMathOperator{\Bin}{Bin}           % Binomial
+\DeclareMathOperator{\Bern}{Bern}         % Bernoulli
+\DeclareMathOperator{\Pois}{Pois}         % Poisson
+\DeclareMathOperator{\Geom}{Geom}         % Geometric
+\DeclareMathOperator{\NegBin}{NegBin}     % Negative binomial
+\DeclareMathOperator{\Hyper}{Hyper}       % Hypergeometric
+\DeclareMathOperator{\Mult}{Mult}         % Multinomial
+\DeclareMathOperator{\Cat}{Cat}           % Categorical
+\DeclareMathOperator{\Categorical}{Cat}           % Categorical
+
+
+% --------------------------------------------------------------------
+% Continuous distributions
+% --------------------------------------------------------------------
+
+% Common symbolic distributions.
+\newcommand{\Normal}{\mathcal{N}}         % Normal
+\newcommand{\normal}{\mathcal{N}}         % Normal
+\newcommand{\ChiSq}{\chi^{2}}             % Chi-squared
+
+% Named continuous distributions.
+\DeclareMathOperator{\Unif}{Unif}         % Uniform
+\DeclareMathOperator{\Exp}{Exp}           % Exponential
+\DeclareMathOperator{\Ga}{Gamma}          % Gamma
+\DeclareMathOperator{\Beta}{Beta}         % Beta
+\DeclareMathOperator{\tdist}{t}           % Student's t
+\DeclareMathOperator{\Fdist}{F}           % F-distribution
+\DeclareMathOperator{\LogNorm}{LogNorm}   % Log-normal
+\DeclareMathOperator{\Weibull}{Weibull}   % Weibull
+\DeclareMathOperator{\Pareto}{Pareto}     % Pareto
+\DeclareMathOperator{\Cauchy}{Cauchy}     % Cauchy
+\DeclareMathOperator{\Logis}{Logis}       % Logistic
+\DeclareMathOperator{\InvGam}{InvGam}     % Inverse gamma
+\DeclareMathOperator{\Dirichlet}{Dir}        % Dirichlet
+\DeclareMathOperator{\Wishart}{Wishart}   % Wishart
+
+
+
+
+% --------------------------------------------------------------------
+% Author comments and distributional relation symbols
+% --------------------------------------------------------------------
+
+% Inline author/comment note.
+% Example:
+%   \sj{Check this argument.}
+\DeclareRobustCommand{\sj}[1]{\textcolor{red}{\textbf{[#1]}}}
+
+
+% --------------------------------------------------------------------
+% Distributional-sim notation
+% --------------------------------------------------------------------
+%
+% Usage:
+%   X \distas{d} Y
+%   X \distas{\mathrm{approx}} Y
+%
+%   X \distras{\mathrm{ind}} F
+%
+% \distas places a label above an ordinary \sim.
+% \distras stretches the \sim to approximately match the width of the
+% label. The stretched version uses \resizebox from graphicx.
+
+\makeatletter
+
+\DeclareRobustCommand{\distas}[1]{%
+  \mathrel{\overset{#1}{\kern\z@\sim}}%
+}
+
+\newsavebox{\mymathnotes@distlabelbox}
+\newsavebox{\mymathnotes@simbox}
+
+\DeclareRobustCommand{\distras}[1]{%
+  \savebox{\mymathnotes@distlabelbox}{%
+    \hbox{\kern3pt$\scriptstyle #1$\kern3pt}%
+  }%
+  \savebox{\mymathnotes@simbox}{\hbox{$\sim$}}%
+  \mathrel{%
+    \overset{#1}{%
+      \kern\z@
+      \resizebox{\wd\mymathnotes@distlabelbox}{\ht\mymathnotes@simbox}{$\sim$}%
+    }%
+  }%
+}
+
+
+% --------------------------------------------------------------------
+% Equality and approximation relation symbols
+% --------------------------------------------------------------------
+%
+% Original command names are preserved:
+%   \eqdef    equality by definition
+%   \eqind    equality in distribution
+%   \eqas     almost-sure equality
+%   \approxid approximate equality in distribution
+%
+% These are math relations, so they receive proper relation spacing.
+
+\newcommand{\eqdef}{\mathrel{\overset{\Delta}{=\joinrel=}}}
+\newcommand{\eqind}{\mathrel{\overset{\mathcal{D}}{=\joinrel=}}}
+\newcommand{\eqas}{\mathrel{\overset{\mathrm{a.s.}}{=\joinrel=}}}
+\newcommand{\approxid}{\mathrel{\overset{\mathcal{D}}{\approx}}}
+
+\makeatother
+
+
+
+% --------------------------------------------------------------------
+% Theorem-like environments
+% --------------------------------------------------------------------
+%
+% Design choice:
+%   The main theorem-like environments use amsthm for numbering and
+%   framed's shaded environment for background color.
+%
+%   We intentionally do not use tcolorbox for theorem, lemma,
+%   proposition, corollary, definition, reading, or reviewQs, in order
+%   to preserve the original visual style of this notes package.
+%
+%   The "proto..." environments provide counters and theorem headings.
+%   The public environments wrap those proto environments in shaded boxes.
+
+% --------------------------------------------------------------------
+% Shaded theorem environments
+% --------------------------------------------------------------------
+
+\newtheorem{prototheorem}{Theorem}[subsection]
+
+\newenvironment{theorem}
+  {\colorlet{shadecolor}{pink!20}%
+   \begin{shaded}%
+   \begin{prototheorem}}
+  {\end{prototheorem}%
+   \end{shaded}}
+
+
+\newtheorem{protolemma}[prototheorem]{Lemma}
+
+\newenvironment{lemma}
+  {\colorlet{shadecolor}{pink!15}%
+   \begin{shaded}%
+   \begin{protolemma}}
+  {\end{protolemma}%
+   \end{shaded}}
+
+
+\newtheorem{protoprop}[prototheorem]{Proposition}
+
+\newenvironment{proposition}
+  {\colorlet{shadecolor}{pink!15}%
+   \begin{shaded}%
+   \begin{protoprop}}
+  {\end{protoprop}%
+   \end{shaded}}
+
+
+\newtheorem{protocorollary}[prototheorem]{Corollary}
+
+\newenvironment{corollary}
+  {\colorlet{shadecolor}{pink!15}%
+   \begin{shaded}%
+   \begin{protocorollary}}
+  {\end{protocorollary}%
+   \end{shaded}}
+
+
+\theoremstyle{definition}
+
+\newtheorem{protodefinition}{Definition}[subsection]
+
+\newenvironment{definition}
+  {\colorlet{shadecolor}{black!5}%
+   \begin{shaded}%
+   \begin{protodefinition}}
+  {\end{protodefinition}%
+   \end{shaded}}
+
+%=======================
+                                                                        
+
+% Keep your existing theorem/counter line if you already have it:
+\newtheorem{protoread}{Reading(s)}[section]
+
+% If you are NOT using the old \newtheorem line, use this instead:
+% \newcounter{protoread}[section]
+% \renewcommand{\theprotoread}{\thesection.\arabic{protoread}}
+
+% List style used only when \item appears
+\newlist{readingitems}{itemize}{1}
+\setlist[readingitems]{%
+  label=\textcolor{green!45!black}{\large\textbullet},
+  leftmargin=1.7em,
+  labelsep=.55em,
+  itemsep=.35em plus .15em,
+  topsep=.25em,
+  parsep=0pt,
+  partopsep=0pt
+}
+
+\makeatletter
+\newif\ifreading@itemsopen
+
+\NewDocumentEnvironment{reading}{ o }
+{%
+  \refstepcounter{protoread}%
+  \begin{tcolorbox}[%
+    enhanced,
+    breakable,
+    colback=lime!5!white,
+    colframe=green!45!black,
+    boxrule=.45pt,
+    arc=2mm,
+    left=1em,
+    right=1em,
+    top=1.1em,
+    bottom=.8em,
+    before skip=1.1ex plus .2ex,
+    after skip=1.1ex plus .2ex,
+    borderline west={2.5pt}{0pt}{green!60!black},
+    drop fuzzy shadow=black!12!white,
+    fonttitle=\sffamily\bfseries,
+    coltitle=white,
+    title={\strut Suggested Readings~\theprotoread%
+      \IfValueT{#1}{\quad{\normalfont\itshape #1}}},
+    attach boxed title to top left={xshift=1em,yshift=-2mm},
+    boxed title style={%
+      colback=green!45!black,
+      colframe=green!45!black,
+      boxrule=.45pt,
+      arc=2mm
+    },
+  ]%
+  \reading@itemsopenfalse
+  \let\reading@olditem\item
+  \renewcommand{\item}{%
+    \ifreading@itemsopen
+      \reading@olditem
+    \else
+      \reading@itemsopentrue
+      \par\begin{readingitems}%
+      \reading@olditem
+    \fi
+  }%
+  \ignorespaces
+}
+{%
+  \ifreading@itemsopen
+    \end{readingitems}%
+  \else
+    \par
+  \fi
+  \let\item\reading@olditem
+  \end{tcolorbox}%
+  \ignorespacesafterend
+}
+\makeatother
+
+% Reading-list environments for subsection preparation and follow-up.
+% This file assumes that myMath-notes has already loaded tcolorbox,
+% enumitem, xcolor, and xparse.
+
+% Core readings use a light blue palette.
+\newlist{readingCoreItems}{itemize}{1}
+\setlist[readingCoreItems]{%
+  label=\textcolor{blue!60!black}{\large\textbullet},
+  leftmargin=1.7em,
+  labelsep=.55em,
+  itemsep=.35em plus .15em,
+  topsep=.25em,
+  parsep=0pt,
+  partopsep=0pt
+}
+
+% Further readings use a light green palette.
+\newlist{readingMoreItems}{itemize}{1}
+\setlist[readingMoreItems]{%
+  label=\textcolor{green!45!black}{\large\textbullet},
+  leftmargin=1.7em,
+  labelsep=.55em,
+  itemsep=.35em plus .15em,
+  topsep=.25em,
+  parsep=0pt,
+  partopsep=0pt
+}
+
+\tcbset{
+  sta5001/readingbox/.style={
+    enhanced,
+    breakable,
+    boxrule=.45pt,
+    arc=2mm,
+    left=1em,
+    right=1em,
+    top=1.1em,
+    bottom=.8em,
+    before skip=1.1ex plus .2ex,
+    after skip=1.1ex plus .2ex,
+    drop fuzzy shadow=black!12!white,
+    fonttitle=\sffamily\bfseries,
+    coltitle=white,
+    attach boxed title to top left={xshift=1em,yshift=-2mm},
+    boxed title style={
+      boxrule=.45pt,
+      arc=2mm
+    }
+  }
+}
+
+\makeatletter
+\newif\ifreadingbox@itemsopen
+
+% #1 printed title; #2 background color; #3 accent color;
+% #4 command opening the appropriate list; #5 command closing it.
+\newcommand{\readingbox@begin}[5]{%
+  \begin{tcolorbox}[%
+    sta5001/readingbox,
+    colback=#2,
+    colframe=#3,
+    borderline west={2.5pt}{0pt}{#3},
+    title={\strut #1~\thesubsection},
+    boxed title style={
+      colback=#3,
+      colframe=#3
+    }
+  ]%
+  \def\readingbox@endlist{#5}%
+  \readingbox@itemsopenfalse
+  \let\readingbox@olditem\item
+  \renewcommand{\item}{%
+    \ifreadingbox@itemsopen
+      \readingbox@olditem
+    \else
+      \readingbox@itemsopentrue
+      \par#4%
+      \readingbox@olditem
+    \fi
+  }%
+  \ignorespaces
+}
+
+\newcommand{\readingbox@end}{%
+  \ifreadingbox@itemsopen
+    \readingbox@endlist
+  \else
+    \par
+  \fi
+  \let\item\readingbox@olditem
+  \end{tcolorbox}%
+  \ignorespacesafterend
+}
+
+\NewDocumentEnvironment{readingCore}{}
+{%
+  \readingbox@begin
+    {Core Reading}
+    {blue!3!white}
+    {blue!60!black}
+    {\begin{readingCoreItems}}
+    {\end{readingCoreItems}}%
+}
+{%
+  \readingbox@end
+}
+
+\NewDocumentEnvironment{readingMore}{}
+{%
+  \readingbox@begin
+    {Further Reading}
+    {lime!5!white}
+    {green!45!black}
+    {\begin{readingMoreItems}}
+    {\end{readingMoreItems}}%
+}
+{%
+  \readingbox@end
+}
+\makeatother
+
+% Keep legacy reading boxes synchronized with their subsection while
+% the notes are migrated to readingCore and readingMore.
+\renewcommand{\theprotoread}{\thesubsection}
+
+
+%=======================
+
+
+\newtheorem{protoRQ}{Review Questions}[section]
+
+% Review questions use the same visual grammar as the reading boxes,
+% but retain their own purple palette.  The interior is deliberately
+% lighter than the legacy purple!15 shaded background.
+\tcbset{
+  sta5001/reviewbox/.style={
+    enhanced,
+    breakable,
+    colback=purple!4!white,
+    colframe=purple!45!black,
+    boxrule=.45pt,
+    arc=2mm,
+    left=1em,
+    right=1em,
+    top=1.1em,
+    bottom=.8em,
+    before skip=1.1ex plus .2ex,
+    after skip=1.1ex plus .2ex,
+    borderline west={2.5pt}{0pt}{purple!60!black},
+    drop fuzzy shadow=black!10!white,
+    fonttitle=\sffamily\bfseries,
+    coltitle=white,
+    attach boxed title to top left={xshift=1em,yshift=-2mm},
+    boxed title style={
+      colback=purple!45!black,
+      colframe=purple!45!black,
+      boxrule=.45pt,
+      arc=2mm
+    }
+  }
+}
+
+\NewDocumentEnvironment{reviewQs}{ o }
+{%
+  \refstepcounter{protoRQ}%
+  \begin{tcolorbox}[
+    sta5001/reviewbox,
+    title={\strut Review Questions~\theprotoRQ%
+      \IfValueT{#1}{\quad{\normalfont\itshape #1}}}
+  ]%
+  \ignorespaces
+}
+{%
+  \end{tcolorbox}%
+  \ignorespacesafterend
+}
+
+% Important questions use the same visual grammar as review questions,
+% but a distinct cyan palette and italic body text.  With no optional
+% argument, the title is "Fundamental Question"; a descriptive category
+% may be supplied when the question is important but not foundational:
+%   \begin{funQs}[Guiding Question]
+% The standard LaTeX quote environment is intentionally left unchanged.
+\newtheorem{protoFQ}{Question}[section]
+
+\tcbset{
+  sta5001/funqbox/.style={
+    enhanced,
+    breakable,
+    colback=cyan!3!white,
+    colframe=cyan!45!black,
+    boxrule=.45pt,
+    arc=2mm,
+    left=1em,
+    right=1em,
+    top=1.1em,
+    bottom=.8em,
+    before skip=1.1ex plus .2ex,
+    after skip=1.1ex plus .2ex,
+    borderline west={2.5pt}{0pt}{cyan!60!black},
+    drop fuzzy shadow=black!10!white,
+    fonttitle=\sffamily\bfseries,
+    coltitle=white,
+    fontupper=\itshape,
+    attach boxed title to top left={xshift=1em,yshift=-2mm},
+    boxed title style={
+      colback=cyan!45!black,
+      colframe=cyan!45!black,
+      boxrule=.45pt,
+      arc=2mm
+    }
+  }
+}
+
+\NewDocumentEnvironment{funQs}{ O{Fundamental Question} }
+{%
+  \refstepcounter{protoFQ}%
+  \begin{tcolorbox}[
+    sta5001/funqbox,
+    title={\strut #1~\theprotoFQ}
+  ]%
+  \ignorespaces
+}
+{%
+  \end{tcolorbox}%
+  \ignorespacesafterend
+}
+
+
+% --------------------------------------------------------------------
+% Theorem styles for examples, exercises, remarks, and counterexamples
+% --------------------------------------------------------------------
+%
+% These environments preserve the original style:
+%   - colored theorem head,
+%   - normal body text,
+%   - custom ending symbol.
+%
+% They are intentionally not shaded, matching the original example,
+% exercise, and remark environments.
+
+% --- Examples ---
+\newtheoremstyle{example_style}
+  {10pt}{10pt}    % Space above/below
+  {\normalfont}   % Body font
+  {}              % Indent amount
+  {\bfseries}     % Theorem head font
+  {}              % Punctuation after theorem head
+  {1em}           % Space after theorem head
+  {\colorbox{blue!25}{\thmname{#1}\thmnumber{ #2}}\thmnote{ (#3)}}
+
+% --- Counterexamples ---
+\newtheoremstyle{counterexample_style}
+  {10pt}{10pt}    % Space above/below
+  {\normalfont}   % Body font
+  {}              % Indent amount
+  {\bfseries}     % Theorem head font
+  {}              % Punctuation after theorem head
+  {1em}           % Space after theorem head
+  {\colorbox{brick!25}{\thmname{#1}\thmnumber{ #2}}\thmnote{ (#3)}}
+
+% --- Exercises ---
+\newtheoremstyle{exercise_style}
+  {10pt}{10pt}    % Space above/below
+  {\normalfont}   % Body font
+  {}              % Indent amount
+  {\bfseries}     % Theorem head font
+  {}              % Punctuation after theorem head
+  {1em}           % Space after theorem head
+  {\colorbox{cyan!25}{\thmname{#1}\thmnumber{ #2}}\thmnote{ (#3)}}
+
+% --- Remarks ---
+\newtheoremstyle{remark_style}
+  {10pt}{10pt}    % Space above/below
+  {\normalfont}   % Body font
+  {}              % Indent amount
+  {\bfseries}     % Theorem head font
+  {}              % Punctuation after theorem head
+  {1em}           % Space after theorem head
+  {\colorbox{red!25}{\thmname{#1}\thmnumber{ #2}}\thmnote{ (#3)}}
+
+
+% --------------------------------------------------------------------
+% Custom ending symbols
+% --------------------------------------------------------------------
+
+\newcommand{\remarkqedsymbol}{\ensuremath{\heartsuit}}
+\newcommand{\exampleqedsymbol}{\ensuremath{\diamondsuit}}
+\newcommand{\exerciseqedsymbol}{\Coffeecup}
+\newcommand{\counterexampleqedsymbol}{\textcolor{brick}{\ensuremath{\spadesuit}}}
+
+
+% --------------------------------------------------------------------
+% Example-like public environments
+% --------------------------------------------------------------------
+
+\theoremstyle{remark_style}
+
+\newtheorem{remarkx}{Remark}[subsection]
+
+\newenvironment{remark}
+  {\pushQED{\qed}%
+   \renewcommand{\qedsymbol}{\remarkqedsymbol}%
+   \remarkx}
+  {\popQED%
+   \endremarkx}
+
+
+\theoremstyle{example_style}
+
+\newtheorem{examplex}{Example}[subsection]
+
+\newenvironment{example}
+  {\pushQED{\qed}%
+   \renewcommand{\qedsymbol}{\exampleqedsymbol}%
+   \examplex}
+  {\popQED%
+   \endexamplex}
+
+
+\theoremstyle{counterexample_style}
+
+% Counterexamples share the example counter.
+% Example:
+%   Example 2.1
+%   Counterexample 2.2
+%   Example 2.3
+%
+% If you prefer independent numbering, replace this line with:
+%   \newtheorem{counterexamplex}{Counterexample}[section]
+\newtheorem{counterexamplex}[examplex]{Counter-example}
+
+\newenvironment{counterexample}
+  {\pushQED{\qed}%
+   \renewcommand{\qedsymbol}{\counterexampleqedsymbol}%
+   \counterexamplex}
+  {\popQED%
+   \endcounterexamplex}
+
+
+\theoremstyle{exercise_style}
+
+\newtheorem{exercisex}{Exercise}[subsection]
+
+\newenvironment{exercise}
+  {\pushQED{\qed}%
+   \renewcommand{\qedsymbol}{\exerciseqedsymbol}%
+   \exercisex}
+  {\popQED%
+    \endexercisex}
+
+
+
+% --------------------------------------------------------------------
+% TikZ styles
+% --------------------------------------------------------------------
+%
+% Important implementation note:
+%   Avoid blank lines inside \tikzset{...}. PGF keys may interpret a
+%   blank line as \par and produce:
+%
+%     Paragraph ended before \pgfkeys@addpath was complete.
+%
+% The package provides namespaced styles:
+%   mymathnotes/basicbox
+%   mymathnotes/decision
+%   mymathnotes/outcome
+%   mymathnotes/connector
+%
+% It also preserves the original short names:
+%   basicbox
+%   decision
+%   outcome
+%   connector
+
+
+% Namespaced basic box style.
+\tikzset{mymathnotes/basicbox/.style={
+  rectangle,
+  rounded corners=4pt,
+  draw=strongblue,
+  very thick,
+  top color=white,
+  bottom color=softblue,
+  text width=3.5cm,
+  minimum height=1.2cm,
+  align=center,
+  drop shadow={opacity=0.3, shadow xshift=2pt, shadow yshift=-2pt},
+  font=\sffamily\small
+}}
+
+
+% Namespaced decision style.
+\tikzset{mymathnotes/decision/.style={
+  diamond,
+  aspect=1.5,
+  draw=orange!60!black,
+  very thick,
+  top color=white,
+  bottom color=softorange,
+  text width=2.5cm,
+  align=center,
+  drop shadow={opacity=0.3, shadow xshift=2pt, shadow yshift=-2pt},
+  font=\sffamily\bfseries\footnotesize
+}}
+
+
+% Namespaced outcome style.
+\tikzset{mymathnotes/outcome/.style={
+  rectangle,
+  rounded corners=4pt,
+  minimum height=1cm,
+  minimum width=2.5cm,
+  align=center,
+  drop shadow={opacity=0.3},
+  font=\sffamily\bfseries
+}}
+
+
+% Namespaced connector style.
+\tikzset{mymathnotes/connector/.style={
+  -{Latex[length=3mm]},
+  thick,
+  draw=black!70,
+  rounded corners=5mm
+}}
+
+
+% Optional colored outcome variants.
+\tikzset{mymathnotes/outcome-success/.style={
+  mymathnotes/outcome,
+  draw=forest!70!black,
+  top color=white,
+  bottom color=softgreen
+}}
+
+\tikzset{mymathnotes/outcome-warning/.style={
+  mymathnotes/outcome,
+  draw=amber!80!black,
+  top color=white,
+  bottom color=softorange
+}}
+
+\tikzset{mymathnotes/outcome-danger/.style={
+  mymathnotes/outcome,
+  draw=brick!80!black,
+  top color=white,
+  bottom color=softred
+}}
+
+% Annotation style for explanatory labels in diagrams.
+\tikzset{mymathnotes/annotation/.style={text centered,font=\itshape\small,color=gray}}
+
+
+% Compatibility aliases preserving the original style names.
+\tikzset{basicbox/.style={/tikz/mymathnotes/basicbox}}
+\tikzset{decision/.style={/tikz/mymathnotes/decision}}
+\tikzset{outcome/.style={/tikz/mymathnotes/outcome}}
+\tikzset{connector/.style={/tikz/mymathnotes/connector}}
+\tikzset{annotation/.style={/tikz/mymathnotes/annotation}}
+
+
+
+% --------------------------------------------------------------------
+% Inline R/code helpers
+% --------------------------------------------------------------------
+%
+% These commands produce small inline boxes for code-related terms.
+%
+% Usage examples:
+%   \Rcode{lm(y ~ x)}
+%   \Rdata{mtcars}
+%   \Rpackage{ggplot2}
+%
+% The visual style preserves the original package behavior:
+%   - \Rcode     yellow background
+%   - \Rdata     green background
+%   - \Rpackage  light gray background
+%
+% The contents are treated as literal code using \detokenize, so common
+% code characters such as underscores can be written directly:
+%   \Rcode{my_variable}
+
+\tcbset{
+  mymathnotes/inlinecode/.style={
+    enhanced,
+    on line,
+    boxrule=0pt,
+    arc=2pt,
+    boxsep=2pt,
+    left=1pt,
+    right=1pt,
+    top=0pt,
+    bottom=0pt,
+    tcbox raise base,
+    nobeforeafter
+  }
+}
+
+\makeatletter
+
+\newcommand{\mymathnotes@inlinecodebox}[2]{%
+  \tcbox[mymathnotes/inlinecode,colback=#1]{%
+    \ttfamily\detokenize{#2}%
+  }%
+}
+
+\DeclareRobustCommand{\Rcode}[1]{%
+  \mymathnotes@inlinecodebox{yellow!40}{#1}%
+}
+
+\DeclareRobustCommand{\Rdata}[1]{%
+  \mymathnotes@inlinecodebox{green!20}{#1}%
+}
+
+\DeclareRobustCommand{\Rpackage}[1]{%
+  \mymathnotes@inlinecodebox{black!10}{#1}%
+}
+
+\makeatother
+
+
+% --------------------------------------------------------------------
+% Listings styles
+% --------------------------------------------------------------------
+%
+% The original package configured listings globally for R.
+% We now define a named style, mymathnotesR, and then apply it globally
+% to preserve the original behavior.
+%
+% Usage:
+%   \begin{lstlisting}
+%   x <- rnorm(100)
+%   mean(x)
+%   \end{lstlisting}
+%
+% Or explicitly:
+%   \begin{lstlisting}[style=mymathnotesR]
+%   x <- rnorm(100)
+%   mean(x)
+%   \end{lstlisting}
+
+\lstdefinestyle{mymathnotesR}{
+  language=R,
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2
+}
+
+% Variant without line numbers.
+\lstdefinestyle{mymathnotesRNoNumbers}{
+  style=mymathnotesR,
+  numbers=none
+}
+
+% Preserve original package behavior: ordinary lstlisting environments
+% use the R style by default.
+\lstset{style=mymathnotesR}
+
+
+% Convenience environment for R listings.
+%
+% Usage:
+%   \begin{Rlisting}
+%   x <- rnorm(100)
+%   mean(x)
+%   \end{Rlisting}
+%
+% Optional listings settings may still be passed:
+%   \begin{Rlisting}[caption={Simulation code}, numbers=none]
+%   ...
+%   \end{Rlisting}
+
+\lstnewenvironment{Rlisting}[1][]
+  {\lstset{style=mymathnotesR,#1}}
+  {}
+
+
+
+% --------------------------------------------------------------------
+% tcolorbox display boxes
+% --------------------------------------------------------------------
+%
+% Design choice:
+%   These boxes are used for pedagogical display material such as
+%   concepts, motivating examples, important results, and notes.
+%
+%   They do not replace the theorem-like environments. Theorem, lemma,
+%   proposition, corollary, definition, reading, and reviewQs remain
+%   based on amsthm + framed/shaded.
+%
+% Public environments:
+%   conceptbox   - blue theory/concept box
+%   examplebox   - green motivating-example box
+%   resultbox    - red result/hypothesis box
+%   remarkbox    - orange side-bar note box
+
+
+% --------------------------------------------------------------------
+% Reusable tcolorbox styles
+% --------------------------------------------------------------------
+
+\tcbset{
+  mymathnotes/conceptbox/.style={
+    colback=azure!5!white,
+    colframe=azure!80!black,
+    fonttitle=\bfseries,
+    enhanced,
+    attach boxed title to top left={yshift=-2mm, xshift=2mm},
+    boxrule=0.5mm,
+    sharp corners=south
+  },
+  mymathnotes/examplebox/.style={
+    colback=forest!5!white,
+    colframe=forest!80!black,
+    fonttitle=\bfseries,
+    enhanced,
+    breakable,
+    attach boxed title to top left={yshift=-2mm, xshift=2mm}
+  },
+  mymathnotes/resultbox/.style={
+    colback=brick!5!white,
+    colframe=brick!80!black,
+    fonttitle=\bfseries
+  },
+  mymathnotes/remarkbox/.style={
+    blanker,
+    borderline west={3pt}{0pt}{amber},
+    before skip=10pt,
+    after skip=10pt,
+    left=10pt,
+    fonttitle=\bfseries\color{amber},
+    title=Note
+  }}
+
+% --------------------------------------------------------------------
+% Public tcolorbox environments
+% --------------------------------------------------------------------
+
+% Theory/concept box.
+%
+% Usage:
+%   \begin{conceptbox}{Title}
+%   ...
+%   \end{conceptbox}
+%
+% Optional tcolorbox options may be passed:
+%   \begin{conceptbox}[breakable]{Title}
+%   ...
+%   \end{conceptbox}
+
+\newtcolorbox{conceptbox}[2][]{
+  mymathnotes/conceptbox,
+  title={#2},
+  #1
+}
+
+
+% Motivating example box.
+%
+% Usage:
+%   \begin{examplebox}{Title}
+%   ...
+%   \end{examplebox}
+%
+% The printed title is:
+%   Motivating Example: Title
+
+\newtcolorbox{examplebox}[2][]{
+  mymathnotes/examplebox,
+  title={Motivating Example: #2},
+  #1
+}
+
+
+% Important result / hypothesis box.
+%
+% Usage:
+%   \begin{resultbox}{Title}
+%   ...
+%   \end{resultbox}
+
+\newtcolorbox{resultbox}[2][]{
+  mymathnotes/resultbox,
+  title={#2},
+  #1
+}
+
+
+% Remark / nuisance-parameter note box.
+%
+% Usage:
+%   \begin{remarkbox}
+%   ...
+%   \end{remarkbox}
+%
+% Optional tcolorbox options may be passed:
+%   \begin{remarkbox}[title={Caution}]
+%   ...
+%   \end{remarkbox}
+
+\newtcolorbox{remarkbox}[1][]{
+  mymathnotes/remarkbox,
+  #1
+}
+
+
+%%%% new stuff
+\DeclareMathOperator{\new}{new} 
+
+
+\endinput
+
+%%
+%% End of file `myMath-notes.sty'.

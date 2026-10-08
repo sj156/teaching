@@ -1,0 +1,16 @@
+# Local OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Python and temporary build outputs
+__pycache__/
+*.py[cod]
+/build/
+/dist/
