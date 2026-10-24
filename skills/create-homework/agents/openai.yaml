@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Homework"
+  short_description: "Focused problem sets with guided math and clear tasks"
+  default_prompt: "Use $create-homework to design or revise a concise assignment grounded in my lecture notes, with guided derivations and clearly highlighted tasks."

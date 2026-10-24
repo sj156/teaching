@@ -3,7 +3,7 @@
 Author and maintainer: **Sheng**, GitHub [sj156](https://github.com/sj156).
 
 This repository shares a portable edition of the author's personal
-`write-lecture-notes` skill. It records teaching preferences and workflows for
+`write-lecture-notes` and `create-homework` skills. It records teaching preferences and workflows for
 exposition, exercises, figures, computation, notation, and editorial review.
 
 Codex assisted in preparing this distribution, including generalizing local

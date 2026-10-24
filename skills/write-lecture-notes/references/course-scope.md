@@ -1,27 +1,33 @@
-# Write Lecture Notes: course scope
+# Course scope and sources
 
-Apply these standards within the scope selected in [SKILL.md](../SKILL.md). This reference does not initiate a separate review pass or expand the task.
+Apply within the user's requested scope. Explicit user constraints take precedence.
 
-## Respect the requested scope
+## Intellectual focus
 
-Apply the standards below within the requested section or module. For a narrow correction or copyedit, preserve that scope instead of expanding it into a full pedagogical audit. The required subsection boxes and exercise minimum apply to every complete subsection being drafted or substantively revised, not separately to each subsubsection or incidental edit. A request to revise or improve a section substantively includes these requirements for all its subsections. A skill-only update does not itself require revising existing course documents. Preserve the course's intended student level; use graduate-level exercises when appropriate to that course. Treat explicit user constraints as authoritative.
-## Authoritative course files
+- Preserve the audience and prerequisites while supporting different teaching and reading paths. Keep the main argument accessible, with essential intermediate reasoning and guidance for readers needing more support; offer deeper arguments and extensions where worthwhile. Use motivating questions rather than mandatory outcome maps or fixed course-level templates. Do not assume support must fade on a schedule.
+- Develop a few consequential methods through motivation, mechanism, applications, and limitations. One or two methods may suffice for a unit, but this is not a quota. Select for transferable reasoning and credible research connections, following the instructor's expressed preferences.
+- Retain carefully selected examples and illustrations when tightening exposition. Condense repetition and improve their explanations or figures before cutting them. A brevity request alone does not authorize deleting established examples or replacing them with generic summaries.
+- An auxiliary diagnostic or variant earns space by changing understanding or practice, protecting validity, or opening a worthwhile question. Do not automatically give each qualification its own treatment or exercise. Omit peripheral coverage rather than building supplements merely to retain everything; honor explicit preservation constraints.
+- Self-contained means sufficient inputs and reasoning for the selected argument, not exhaustive coverage of related methods.
 
-- Identify the authoritative notes, figures, bibliography, and any requested computational companion from the user's request and existing project context. Do not assume a particular cloud provider, institution, course code, or local path.
-- Read the current sources before editing. Work in the location requested by the user and preserve unrelated changes. If the authoritative location is ambiguous or unavailable, resolve it before editing rather than silently using a stale mirror.
-- Save source changes and requested outputs in the established course project. Temporary build and verification artifacts may live elsewhere. Respect an explicitly requested checkout, worktree, or separate output copy.
-- Obtain course-specific prerequisites, notation, style files, programming language, and output requirements from the project. Do not assume that a private style package or computational companion is installed.
+## Establish the source and context
 
-## Begin with the course context
+- Inspect current notes and relevant neighbors; distinguish completed sections from preliminary material. Preserve the existing course style, notation, labels, and numbering. Identify the audience, teaching scope, and prior results; ask only about consequential gaps not resolved by project context.
+- Work directly in the authoritative course folder identified by the instructor or project, including its figures and bibliography. Resolve ambiguous or unavailable sources before editing.
+- Save final sources and compiled outputs in the authoritative location. Temporary builds, backups, and verification artifacts may live elsewhere. Avoid maintaining a separate editable mirror and later overwriting current sources. Preserve unrelated edits; resolve an unavailable or ambiguous source before editing. Honor an explicitly different destination.
+- Map concepts and visual explanations together before a substantive rewrite; allocate real work to missing figures. See [figures](figures.md) for coverage and evidence, and [exposition](exposition.md) for the teaching sequence.
 
-1. Inspect the existing notes and source files when supplied. Use completed sections as models and distinguish them from preliminary material. If the course uses a `.sty` file, preserve its visual conventions; do not recreate the style in this skill.
-2. Identify the intended audience, assumed prerequisites, topic, learning scope, and the relationship to preceding and subsequent material. Ask only for missing details that would substantially alter the work; otherwise state reasonable assumptions.
-3. Establish notation and parameterizations before using them. Keep symbols, terminology, theorem numbering, citations, and cross-references consistent with the surrounding course.
-4. For substantive drafting or revision, plan the major concepts and their visual explanations together, using the [concept-driven figure guidance](figures.md). Allocate work to missing high-value figures before treating the module as a prose-and-formatting cleanup.
-## Audit scope and placement
+## Aligning notes with taught material
 
-- Before substantively revising a section, inspect the headings and relevant exposition of its neighboring sections. Identify each section's main learning target and prerequisites; check whether each subsection develops that target or primarily teaches the next section's subject.
-- Give each substantive concept a primary home. Consolidate duplicate definitions, results, examples, algorithms, and exercises there, preserving useful complementary material. A transition may briefly motivate the next topic and cross-reference it, but should not become a second full treatment of that topic.
-- Before redeveloping foundational material, check what earlier modules already establish. Use a concise recall and precise course reference, then develop only the new specialization, consequence, or assumption. Organize supporting subsections or subsubsections by conceptual dependency; keep distinct inferential developments together instead of repeatedly interrupting model setup or estimation with resampling. Do not impose one universal outline across subjects.
-- Within the authorized revision scope, relocate, merge, shorten, or retitle material when that improves the conceptual sequence; do not preserve a misplaced subsection merely to keep its number. If relocation would require substantive changes outside the requested scope, flag the dependency and keep those changes limited to necessary references or transitions.
-- After restructuring, recheck prerequisites, forward references, notation, labels, numbering, reading assignments, and subsection boxes. Keep the four required boxes unique to each resulting subsection; remove obsolete duplicate boxes when merging. Preserve working cross-references and explain significant moves in the delivery summary.
+Use this workflow only when requested; do not assume all course documents must match lecture coverage exactly.
+
+- Establish what was fully taught, briefly mentioned, or not covered, and at what depth. When working subsection by subsection, carry accepted decisions forward. Once revision is authorized, make ordinary editorial choices without reopening settled questions.
+- Preserve core results and derivations or proof sketches. Briefly mentioned topics need the idea, essential statement, assumptions, and consequence. Uncovered material may become a guided exercise, concise conceptual message, optional supplement, or omission; choose by learning value rather than automatically moving everything to exercises.
+- Keep a compact retain/condense/exercise/omit map outside student notes when restructuring is substantial. Preserve a recoverable snapshot before removals. Reuse worthwhile examples, figures, and exercises within the retained narrative.
+
+## Placement and dependencies
+
+- Give each substantive concept a primary explanatory home. Consolidate duplicated exposition while retaining complementary evidence and purposeful revisiting in new settings. Transitions motivate and cross-reference the next topic without teaching it twice.
+- Recall earlier foundational results concisely and develop the new specialization or consequence. Organize by conceptual dependency; keep shared inferential procedures together instead of repeatedly interrupting model setup with resampling machinery.
+- Within scope, relocate, merge, shorten, or retitle when it improves the sequence. Outside scope, limit changes to necessary transitions and references, and flag dependencies requiring substantive work.
+- After restructuring, check prerequisites, forward references, notation, labels, readings, exercises, and course boxes. Apply [exposition](exposition.md) and [exercises](exercises.md) within the revised scope; incidental edits do not trigger additional boxes or practice.

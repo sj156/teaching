@@ -1,6 +1,8 @@
 # Teaching
 
-Reusable teaching workflows by **Sheng ([sj156](https://github.com/sj156))**, beginning with a Codex skill for drafting and improving lecture notes.
+Reusable teaching workflows by **Sheng ([sj156](https://github.com/sj156))**, with Codex skills for lecture notes and homework.
+
+Current release: **v0.1.0**.
 
 **Publicly viewable; all rights reserved.** This repository is not open source. Ask for permission before installing, using, adapting, or redistributing the materials beyond rights provided by applicable law or GitHub's terms. See [LICENSE](LICENSE).
 
@@ -9,13 +11,19 @@ Reusable teaching workflows by **Sheng ([sj156](https://github.com/sj156))**, be
 [`write-lecture-notes`](skills/write-lecture-notes/SKILL.md) supports drafting, extending, revising, and auditing course notes. Its conventions emphasize:
 
 - Self-contained explanations, definitions followed by examples, and results followed by proofs and applications.
-- Four subsection boxes: Core Reading, Guiding Questions, Review Questions, and Further Reading.
+- Flexible course conventions, including subsection boxes: Core Reading, Guiding Questions, Review Questions, and Further Reading.
 - Motivated exercises, computational investigations, and concept-driven figures.
 - Consistent notation, verified reading references, and work proportional to the requested edit.
 
 These are author-developed teaching conventions, not universal requirements. Explicit instructor requests and established course conventions take precedence. The detailed statistical examples and R/ggplot2 guidance reflect the skill's origins in statistics teaching; adapt them explicitly for another discipline or software environment.
 
-The package contains instructions and seven supporting references. The skill itself does not include lecture manuscripts, datasets, private course files, or a hosted service. The accompanying [LaTeX style](latex/README.md) is provided separately from the skill; its installation, dependencies, and package options are documented there. It does not install required authoring software. Mathematical claims, citations, code, and rendered documents still need verification.
+The lecture-notes package contains instructions and eight supporting references. The skill itself does not include lecture manuscripts, datasets, private course files, or a hosted service. The accompanying [LaTeX style](latex/README.md) is provided separately from the skill; its installation, dependencies, and package options are documented there. It does not install required authoring software. Mathematical claims, citations, code, and rendered documents still need verification.
+
+## Homework skill
+
+[`create-homework`](skills/create-homework/SKILL.md) develops concise assignments grounded in course notes, with accessible hints, substantive theoretical or empirical questions, and bounded research extensions. Data, plots, and schematics are included when they serve the question. It contains five supporting references. It follows the project’s LaTeX style and does not require the author’s private `myHW.sty`.
+
+Both skills support reasoning about assumptions, counterexamples, misconceptions, and research connections. They preserve generous guidance without prescribing narrow learning outcomes or scheduled removal of hints.
 
 ## Request permission
 
@@ -33,6 +41,8 @@ else
   cp -R skills/write-lecture-notes "$HOME/.agents/skills/"
 fi
 ```
+
+Install `create-homework` using the same destination check and copy command with that skill name.
 
 Keep the entire skill directory, including `references/`. Codex detects local skills; restart it if the skill does not appear. Avoid installing duplicate copies under multiple skill directories. See the [official skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
